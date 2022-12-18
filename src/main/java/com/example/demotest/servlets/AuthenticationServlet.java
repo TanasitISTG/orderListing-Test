@@ -20,20 +20,21 @@ public class AuthenticationServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
+        CustomerRepository customerRepository = new CustomerRepository();
+        Customer customer = customerRepository.findByName(username);
+
         if ((username == null || username.trim().length() == 0) || (password == null || password.trim().length() == 0)) {
             request.setAttribute("emptyInput", "Username or password is empty");
             getServletContext().getRequestDispatcher("/index.jsp").forward(request, response);
         }
 
-        CustomerRepository customerRepository = new CustomerRepository();
-        Customer customer = customerRepository.findByName(username);
         if (customer == null) {
             request.setAttribute("invalidUsername", "User not found");
-            request.getRequestDispatcher("/index.jsp").forward(request, response);
+            getServletContext().getRequestDispatcher("/index.jsp").forward(request, response);
         } else {
             BCrypt.Result result = BCrypt.verifyer().verify(password.toCharArray(), customer.getPassword());
             if (!result.verified) {
-                request.setAttribute("invalidPassword", "Invalid password");
+                request.setAttribute("invalidPassword", "invalid password");
                 getServletContext().getRequestDispatcher("/index.jsp").forward(request, response);
             } else {
                 request.getSession().setAttribute("user", customer);
